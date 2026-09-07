@@ -39,7 +39,9 @@ Future<void> printTickets(String name, List<RecordData> tickets) async {
                       pw.SizedBox(height: 6),
                       pw.Text('Username: ${ticket['name']}'),
                       pw.Text('Password: ${ticket['password']}'),
-                      pw.Text('Online time: ${ticket['limit-uptime']}'),
+                      pw.Text(
+                        'Online time: ${ticket['limit-uptime'] ?? 'No limit'}',
+                      ),
                     ],
                   ),
                 ),
@@ -576,17 +578,30 @@ class ExistingTickets extends StatelessWidget {
   final LocalRouter router;
   final RouterApi api;
   const ExistingTickets({super.key, required this.router, required this.api});
+  Future<List<RecordData>> fetch() async =>
+      (await api.run(router, ['/ip/hotspot/user/print']))
+          .where(
+            (t) =>
+                t['name'] != 'default-trial' &&
+                t['password'] != null &&
+                (t['password'] as String).isNotEmpty,
+          )
+          .toList();
   @override
   Widget build(BuildContext context) => DataPage(
     title: 'Existing vouchers',
-    load: () async => (await api.run(router, ['/ip/hotspot/user/print']))
-        .where(
-          (t) =>
-              t['name'] != 'default-trial' &&
-              t['password'] != null &&
-              (t['password'] as String).isNotEmpty,
-        )
-        .toList(),
+    load: fetch,
+    addLabel: 'Print all vouchers',
+    addIcon: Icons.print,
+    add: () async {
+      final tickets = await fetch();
+      if (tickets.length > 500) {
+        throw const AppFailure(
+          'This router has more than 500 vouchers. Print individual tickets or smaller new batches.',
+        );
+      }
+      await printTickets(router.name, tickets);
+    },
     item: (context, row, refresh) => RecordCard(
       title: row['name'] ?? 'Voucher',
       values: {'Usage': usageState(row), 'Online time': row['limit-uptime']},

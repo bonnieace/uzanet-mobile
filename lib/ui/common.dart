@@ -240,6 +240,7 @@ class DataPage extends StatefulWidget {
   final Widget Function(BuildContext, RecordData, VoidCallback) item;
   final Future<void> Function()? add;
   final String? addLabel;
+  final IconData addIcon;
   const DataPage({
     super.key,
     required this.title,
@@ -247,6 +248,7 @@ class DataPage extends StatefulWidget {
     required this.item,
     this.add,
     this.addLabel,
+    this.addIcon = Icons.add,
   });
   @override
   State<DataPage> createState() => _DataPageState();
@@ -329,7 +331,7 @@ class _DataPageState extends State<DataPage> {
                     }
                   },
             label: Text(widget.addLabel ?? 'Add'),
-            icon: const Icon(Icons.add),
+            icon: Icon(widget.addIcon),
           ),
     body: loading
         ? const Center(child: CircularProgressIndicator())
