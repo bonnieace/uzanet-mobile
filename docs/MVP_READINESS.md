@@ -77,3 +77,11 @@ The existing `com.example.uzanet` application identifiers are preserved to avoid
 Automated checks and CI status are recorded in the pull request. Tests cover protocol fragmentation and secret-safe errors, local address/uptime validation, secure-write-before-provision behavior, interrupted voucher recovery, duplicate submit guards, token invalidation/session races, payment replay/capabilities and public-vs-authenticated navigation. A passing mock-based suite is not a claim of verified provider, VPN, printer or physical-device operation.
 
 The Flutter tooling’s Azure metadata probe is suppressed with its supported `CI=true` environment and analytics disabled. In a root/container runtime that rejects archive ownership IDs, `TAR_OPTIONS=--no-same-owner` allows SDK extraction without changing file ownership. Neither setting changes application behavior.
+
+Remote onboarding supports the backend's expiring, single-use fetch/import command.
+The result page lets the operator copy the command and inspect the manual RSC
+fallback; old backend responses without a command still display the script.
+Deploy backend migration `a7b8c9d0e1f2` first. No tokens are stored in app preferences.
+Replacing an existing managed tunnel is explicit and disconnects its previous
+UzaNet record. Account-free local onboarding is unchanged. Physical RouterOS
+fetch/import and certificate-store acceptance are still required before rollout.

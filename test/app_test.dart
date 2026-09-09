@@ -3,9 +3,63 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:uzanet/app.dart';
 import 'package:uzanet/core/backend_api.dart';
 import 'package:uzanet/ui/common.dart';
+import 'package:uzanet/ui/remote.dart';
+import 'package:flutter/services.dart';
 import 'core_test.dart' show MemoryVault, FakeTransport, FakeRouter;
 
 void main() {
+  testWidgets(
+    'onboarding copies command and retains the legacy script fallback',
+    (tester) async {
+      String? copied;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copied = call.arguments['text'] as String;
+          }
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: OnboardingResult(
+            result: {
+              'install_command': ':do { /tool fetch }',
+              'script': 'fallback-rsc',
+              'expires_at': '2030-01-01T00:00:00',
+              'l2tp_peer': {'provisioned': true},
+            },
+          ),
+        ),
+      );
+      await tester.tap(find.text('Copy setup command'));
+      await tester.pumpAndSettle();
+      expect(copied, ':do { /tool fetch }');
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: OnboardingResult(
+            result: {
+              'script': 'legacy-rsc',
+              'expires_at': '2030-01-01T00:00:00',
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Copy setup command'), findsNothing);
+      await tester.tap(find.text('Manual RSC fallback'));
+      await tester.pumpAndSettle();
+      expect(find.text('legacy-rsc'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
   testWidgets('free local setup is available without authentication', (
     tester,
   ) async {

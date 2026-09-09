@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../core/backend_api.dart';
 import '../core/models.dart';
 import 'common.dart';
@@ -114,22 +115,29 @@ class RemoteHome extends StatelessWidget {
           initial: 'mpesa',
           choices: providers,
         ),
+        const InputSpec(
+          'replace_managed_tunnel',
+          'Replace existing UzaNet tunnel?',
+          initial: 'no',
+          choices: {
+            'no': 'No — stop on conflict',
+            'yes': 'Yes — disconnect previous UzaNet record',
+          },
+        ),
       ],
-      submit: (v) => api.call('POST', 'routers/onboarding', body: v),
+      submit: (v) => api.call(
+        'POST',
+        'routers/onboarding',
+        body: {
+          ...v,
+          'replace_managed_tunnel': v['replace_managed_tunnel'] == 'yes',
+        },
+      ),
     );
     if (context.mounted && result is RecordData) {
       await Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => SensitiveResult(
-            title: 'Router setup script',
-            help:
-                'Expires: ${result['expires_at']}. This script contains one-time credentials. Run it in the intended router’s terminal. Then refresh router status to confirm connection.',
-            value:
-                result['script'] ??
-                'No script returned. Check router onboarding status.',
-          ),
-        ),
+        MaterialPageRoute(builder: (_) => OnboardingResult(result: result)),
       );
     }
   }
@@ -155,6 +163,75 @@ class RemoteHome extends StatelessWidget {
       ),
     ),
   );
+}
+
+class OnboardingResult extends StatelessWidget {
+  final RecordData result;
+  const OnboardingResult({super.key, required this.result});
+
+  @override
+  Widget build(BuildContext context) {
+    final command = result['install_command'] as String?;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Connect router')),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Text(
+            'Expires: ${result['expires_at']}. Keep this setup bundle private.',
+          ),
+          if (result['l2tp_peer']?['provisioned'] != true)
+            const Text(
+              'The VPN account was not provisioned automatically. Configure the peer on the VPS before running setup.',
+            ),
+          if (command != null && command.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Text(
+              'Paste the whole command into the router terminal. It downloads over HTTPS, imports the script and removes the downloaded file.',
+            ),
+            SelectableText(command),
+            FilledButton.icon(
+              icon: const Icon(Icons.copy),
+              label: const Text('Copy setup command'),
+              onPressed: () async {
+                try {
+                  await Clipboard.setData(ClipboardData(text: command));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Setup command copied.')),
+                    );
+                  }
+                } catch (_) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Select and copy the command manually.'),
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+            const Text(
+              'The download works once. Keep the fallback RSC privately if you need to retry before expiry. The router needs a correct clock and trusted HTTPS certificates.',
+            ),
+          ],
+          const SizedBox(height: 16),
+          ExpansionTile(
+            title: const Text('Manual RSC fallback'),
+            children: [
+              SelectableText(
+                result['script'] as String? ?? 'No script returned.',
+              ),
+            ],
+          ),
+          const Text(
+            'The script saves a configuration backup. Existing hotspot files and their redirect need updating separately. Refresh router status after setup to confirm connection.',
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class SensitiveResult extends StatelessWidget {
