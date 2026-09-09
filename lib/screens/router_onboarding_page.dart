@@ -131,7 +131,7 @@ class _RouterOnboardingPageState extends State<RouterOnboardingPage> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: _provider,
+                    initialValue: _provider,
                     decoration: const InputDecoration(labelText: 'Payment provider'),
                     items: const [
                       DropdownMenuItem(value: 'mpesa', child: Text('M-Pesa Direct')),
