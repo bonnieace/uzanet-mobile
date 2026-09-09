@@ -49,10 +49,7 @@ class UzanetApi {
         .post(
           Uri.parse('$baseUrl/auth/token'),
           headers: const {'Content-Type': 'application/x-www-form-urlencoded'},
-          body: {
-            'username': username.trim(),
-            'password': password,
-          },
+          body: {'username': username.trim(), 'password': password},
         )
         .timeout(const Duration(seconds: 30));
 
@@ -86,7 +83,6 @@ class UzanetApi {
   }
 
   Future<Map<String, dynamic>> me() => _getMap('/me');
-
   Future<List<Map<String, dynamic>>> routers() => _getList('/routers');
 
   Future<List<Map<String, dynamic>>> routerStatuses() async {
@@ -95,6 +91,27 @@ class UzanetApi {
     if (rows is! List) return const [];
     return rows.whereType<Map>().map((row) => Map<String, dynamic>.from(row)).toList();
   }
+
+  Future<Map<String, dynamic>> routerStatus(String routerUid) =>
+      _getMap('/routers/${Uri.encodeComponent(routerUid)}/status');
+
+  Future<List<Map<String, dynamic>>> packages(String routerUid) =>
+      _getList('/routers/${Uri.encodeComponent(routerUid)}/packages');
+
+  Future<List<Map<String, dynamic>>> hotspotUsers(String routerUid) =>
+      _getList('/routers/${Uri.encodeComponent(routerUid)}/hotspot-users');
+
+  Future<List<Map<String, dynamic>>> pppoeUsers(String routerUid) =>
+      _getList('/routers/${Uri.encodeComponent(routerUid)}/pppoe-users');
+
+  Future<Map<String, dynamic>> activeUsers(String routerUid) =>
+      _getMap('/routers/${Uri.encodeComponent(routerUid)}/active-users');
+
+  Future<List<Map<String, dynamic>>> payments(String routerUid) =>
+      _getList('/routers/${Uri.encodeComponent(routerUid)}/payments');
+
+  Future<Map<String, dynamic>> traffic(String routerUid) =>
+      _getMap('/routers/${Uri.encodeComponent(routerUid)}/traffic');
 
   Future<Map<String, dynamic>> beginRouterOnboarding({
     required String name,
@@ -117,7 +134,10 @@ class UzanetApi {
     final data = _decode(response);
     _throwIfUnauthorized(response, data);
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw UzanetApiException(_detail(data, 'Request failed.'), statusCode: response.statusCode);
+      throw UzanetApiException(
+        _detail(data, 'Request failed.'),
+        statusCode: response.statusCode,
+      );
     }
     return data;
   }
@@ -129,16 +149,27 @@ class UzanetApi {
     final decoded = _decodeAny(response);
     _throwIfUnauthorized(response, decoded);
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      final map = decoded is Map ? Map<String, dynamic>.from(decoded) : <String, dynamic>{};
-      throw UzanetApiException(_detail(map, 'Request failed.'), statusCode: response.statusCode);
+      final map = decoded is Map
+          ? Map<String, dynamic>.from(decoded)
+          : <String, dynamic>{};
+      throw UzanetApiException(
+        _detail(map, 'Request failed.'),
+        statusCode: response.statusCode,
+      );
     }
     if (decoded is! List) {
       throw const UzanetApiException('The server returned an invalid list response.');
     }
-    return decoded.whereType<Map>().map((row) => Map<String, dynamic>.from(row)).toList();
+    return decoded
+        .whereType<Map>()
+        .map((row) => Map<String, dynamic>.from(row))
+        .toList();
   }
 
-  Future<Map<String, dynamic>> _postMap(String path, Map<String, dynamic> body) async {
+  Future<Map<String, dynamic>> _postMap(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
     final response = await _client
         .post(
           Uri.parse('$baseUrl$path'),
@@ -149,7 +180,10 @@ class UzanetApi {
     final data = _decode(response);
     _throwIfUnauthorized(response, data);
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw UzanetApiException(_detail(data, 'Request failed.'), statusCode: response.statusCode);
+      throw UzanetApiException(
+        _detail(data, 'Request failed.'),
+        statusCode: response.statusCode,
+      );
     }
     return data;
   }
@@ -169,8 +203,13 @@ class UzanetApi {
     if (response.statusCode != 401) return;
     _token = null;
     _storage.delete(key: _tokenKey);
-    final map = data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{};
-    throw UzanetApiException(_detail(map, 'Your session has expired.'), statusCode: 401);
+    final map = data is Map
+        ? Map<String, dynamic>.from(data)
+        : <String, dynamic>{};
+    throw UzanetApiException(
+      _detail(map, 'Your session has expired.'),
+      statusCode: 401,
+    );
   }
 
   Map<String, dynamic> _decode(http.Response response) {
@@ -184,7 +223,9 @@ class UzanetApi {
     try {
       return jsonDecode(response.body);
     } catch (_) {
-      return <String, dynamic>{'detail': 'The server returned an unreadable response.'};
+      return <String, dynamic>{
+        'detail': 'The server returned an unreadable response.',
+      };
     }
   }
 
