@@ -2,7 +2,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:label="uzanet"
+        android:label="UzaNet"
+        android:allowBackup="false"
+        android:usesCleartextTraffic="false"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity
