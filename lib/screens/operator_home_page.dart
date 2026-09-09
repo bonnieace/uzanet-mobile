@@ -36,12 +36,8 @@ class _OperatorHomePageState extends State<OperatorHomePage> {
       _error = null;
     });
     try {
-      final results = await Future.wait([
-        widget.api.me(),
-        widget.api.routers(),
-      ]);
-      final profile = results[0] as Map<String, dynamic>;
-      final routers = results[1] as List<Map<String, dynamic>>;
+      final profile = await widget.api.me();
+      final routers = await widget.api.routers();
       List<Map<String, dynamic>> statuses = const [];
       try {
         statuses = await widget.api.routerStatuses();
@@ -80,7 +76,9 @@ class _OperatorHomePageState extends State<OperatorHomePage> {
   }
 
   Future<void> _onboard() async {
-    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => RouterOnboardingPage(api: widget.api)));
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => RouterOnboardingPage(api: widget.api)),
+    );
     if (mounted) await _load();
   }
 
@@ -93,7 +91,9 @@ class _OperatorHomePageState extends State<OperatorHomePage> {
 
   Color _statusColor(BuildContext context, String status) {
     if (status == 'online' || status == 'claimed') return Colors.green;
-    if (status == 'offline' || status.contains('failed')) return Theme.of(context).colorScheme.error;
+    if (status == 'offline' || status.contains('failed')) {
+      return Theme.of(context).colorScheme.error;
+    }
     return Colors.orange;
   }
 
@@ -104,20 +104,28 @@ class _OperatorHomePageState extends State<OperatorHomePage> {
       appBar: AppBar(
         title: const Text('Uzanet'),
         actions: [
-          IconButton(onPressed: _loading ? null : _load, icon: const Icon(Icons.refresh_rounded), tooltip: 'Refresh'),
+          IconButton(
+            onPressed: _loading ? null : _load,
+            icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Refresh',
+          ),
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'logout') _logout();
             },
-            itemBuilder: (_) => const [PopupMenuItem(value: 'logout', child: Text('Sign out'))],
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'logout', child: Text('Sign out')),
+            ],
           ),
         ],
       ),
-      floatingActionButton: _routers.isEmpty ? null : FloatingActionButton.extended(
-        onPressed: _onboard,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Add router'),
-      ),
+      floatingActionButton: _routers.isEmpty
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _onboard,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Add router'),
+            ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -135,7 +143,12 @@ class _OperatorHomePageState extends State<OperatorHomePage> {
             ),
             const SizedBox(height: 20),
             if (_loading && _routers.isEmpty)
-              const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(40),
+                  child: CircularProgressIndicator(),
+                ),
+              )
             else if (_error != null && _routers.isEmpty)
               _ErrorCard(message: _error!, onRetry: _load)
             else if (_routers.isEmpty)
@@ -144,8 +157,14 @@ class _OperatorHomePageState extends State<OperatorHomePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Routers', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-                  Text('${_routers.length}', style: TextStyle(color: colors.onSurfaceVariant, fontWeight: FontWeight.w700)),
+                  Text(
+                    'Routers',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  Text(
+                    '${_routers.length}',
+                    style: TextStyle(color: colors.onSurfaceVariant, fontWeight: FontWeight.w700),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -163,7 +182,7 @@ class _OperatorHomePageState extends State<OperatorHomePage> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: colors.surfaceContainerHighest.withValues(alpha: .45),
+                color: colors.surfaceContainerHighest.withOpacity(.45),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Column(
@@ -171,7 +190,9 @@ class _OperatorHomePageState extends State<OperatorHomePage> {
                 children: [
                   Text('Legacy mobile tools retained', style: TextStyle(fontWeight: FontWeight.w800)),
                   SizedBox(height: 6),
-                  Text('The previous direct RouterOS screens remain in the codebase during migration, but the production entry point no longer uses hardcoded local router credentials.'),
+                  Text(
+                    'The previous direct RouterOS screens remain in the codebase during migration, but the production entry point no longer uses hardcoded local router credentials.',
+                  ),
                 ],
               ),
             ),
@@ -184,6 +205,7 @@ class _OperatorHomePageState extends State<OperatorHomePage> {
 
 class _FirstRouterCard extends StatelessWidget {
   const _FirstRouterCard({required this.onStart});
+
   final VoidCallback onStart;
 
   @override
@@ -192,7 +214,9 @@ class _FirstRouterCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [colors.primary, colors.primary.withValues(alpha: .78)]),
+        gradient: LinearGradient(
+          colors: [colors.primary, colors.primary.withOpacity(.78)],
+        ),
         borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
@@ -200,11 +224,24 @@ class _FirstRouterCard extends StatelessWidget {
         children: [
           const Icon(Icons.router_rounded, color: Colors.white, size: 34),
           const SizedBox(height: 18),
-          Text('Connect your first MikroTik', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
+          Text(
+            'Connect your first MikroTik',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
           const SizedBox(height: 8),
-          const Text('Generate a secure one-line setup command, paste it into RouterOS, and let the router claim itself.', style: TextStyle(color: Colors.white70)),
+          const Text(
+            'Generate a secure one-line setup command, paste it into RouterOS, and let the router claim itself.',
+            style: TextStyle(color: Colors.white70),
+          ),
           const SizedBox(height: 18),
-          FilledButton.tonalIcon(onPressed: onStart, icon: const Icon(Icons.arrow_forward_rounded), label: const Text('Start onboarding')),
+          FilledButton.tonalIcon(
+            onPressed: onStart,
+            icon: const Icon(Icons.arrow_forward_rounded),
+            label: const Text('Start onboarding'),
+          ),
         ],
       ),
     );
@@ -212,7 +249,11 @@ class _FirstRouterCard extends StatelessWidget {
 }
 
 class _RouterCard extends StatelessWidget {
-  const _RouterCard({required this.router, required this.status, required this.statusColor});
+  const _RouterCard({
+    required this.router,
+    required this.status,
+    required this.statusColor,
+  });
 
   final Map<String, dynamic> router;
   final String status;
@@ -234,7 +275,10 @@ class _RouterCard extends StatelessWidget {
             Container(
               width: 50,
               height: 50,
-              decoration: BoxDecoration(color: colors.primaryContainer, borderRadius: BorderRadius.circular(14)),
+              decoration: BoxDecoration(
+                color: colors.primaryContainer,
+                borderRadius: BorderRadius.circular(14),
+              ),
               child: Icon(Icons.router_rounded, color: colors.primary),
             ),
             const SizedBox(width: 14),
@@ -242,17 +286,33 @@ class _RouterCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(router['name']?.toString() ?? 'MikroTik router', style: const TextStyle(fontWeight: FontWeight.w800)),
+                  Text(
+                    router['name']?.toString() ?? 'MikroTik router',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
                   const SizedBox(height: 4),
-                  Text(router['portal_slug']?.toString() ?? '', style: TextStyle(color: colors.onSurfaceVariant)),
-                  if (router['routeros_version'] != null) Text('RouterOS ${router['routeros_version']}', style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12)),
+                  Text(
+                    router['portal_slug']?.toString() ?? '',
+                    style: TextStyle(color: colors.onSurfaceVariant),
+                  ),
+                  if (router['routeros_version'] != null)
+                    Text(
+                      'RouterOS ${router['routeros_version']}',
+                      style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
+                    ),
                 ],
               ),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(color: statusColor.withValues(alpha: .12), borderRadius: BorderRadius.circular(999)),
-              child: Text(status, style: TextStyle(color: statusColor, fontWeight: FontWeight.w800, fontSize: 12)),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(.12),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                status,
+                style: TextStyle(color: statusColor, fontWeight: FontWeight.w800, fontSize: 12),
+              ),
             ),
           ],
         ),
@@ -263,6 +323,7 @@ class _RouterCard extends StatelessWidget {
 
 class _ErrorCard extends StatelessWidget {
   const _ErrorCard({required this.message, required this.onRetry});
+
   final String message;
   final VoidCallback onRetry;
 
@@ -271,7 +332,10 @@ class _ErrorCard extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: colors.errorContainer, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+        color: colors.errorContainer,
+        borderRadius: BorderRadius.circular(14),
+      ),
       child: Row(
         children: [
           Icon(Icons.error_outline_rounded, color: colors.onErrorContainer),
