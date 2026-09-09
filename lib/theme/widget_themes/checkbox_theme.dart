@@ -1,46 +1,31 @@
+// MaterialStateProperty remains intentionally used for compatibility with the
+// older Flutter versions this mobile client has historically supported.
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
 import '../../constants/sizes.dart';
 
-/// Custom Class for Light & Dark Text Themes
 class TCheckboxTheme {
-  TCheckboxTheme._(); // To avoid creating instances
+  TCheckboxTheme._();
 
-  /// Customizable Light Text Theme
   static CheckboxThemeData lightCheckboxTheme = CheckboxThemeData(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(TSizes.xs)),
     checkColor: MaterialStateProperty.resolveWith((states) {
-      if (states.contains(MaterialState.selected)) {
-        return TColors.white;
-      } else {
-        return TColors.black;
-      }
+      return states.contains(MaterialState.selected) ? TColors.white : TColors.black;
     }),
     fillColor: MaterialStateProperty.resolveWith((states) {
-      if (states.contains(MaterialState.selected)) {
-        return TColors.primary;
-      } else {
-        return Colors.transparent;
-      }
+      return states.contains(MaterialState.selected) ? TColors.primary : Colors.transparent;
     }),
   );
 
-  /// Customizable Dark Text Theme
   static CheckboxThemeData darkCheckboxTheme = CheckboxThemeData(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(TSizes.xs)),
     checkColor: MaterialStateProperty.resolveWith((states) {
-      if (states.contains(MaterialState.selected)) {
-        return TColors.white;
-      } else {
-        return TColors.black;
-      }
+      return states.contains(MaterialState.selected) ? TColors.white : TColors.black;
     }),
     fillColor: MaterialStateProperty.resolveWith((states) {
-      if (states.contains(MaterialState.selected)) {
-        return TColors.primary;
-      } else {
-        return Colors.transparent;
-      }
+      return states.contains(MaterialState.selected) ? TColors.primary : Colors.transparent;
     }),
   );
 }
