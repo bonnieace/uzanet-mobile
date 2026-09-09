@@ -12,7 +12,12 @@ class FakeApi extends UzanetApi {
   @override
   Future<void> login(String username, String password) async {
     loggedIn = username == 'operator' && password == 'correct-password';
-    if (!loggedIn) throw const UzanetApiException('Incorrect username or password', statusCode: 401);
+    if (!loggedIn) {
+      throw const UzanetApiException(
+        'Incorrect username or password',
+        statusCode: 401,
+      );
+    }
   }
 
   @override
@@ -40,12 +45,20 @@ void main() {
   testWidgets('operator can sign in through the Uzanet API flow', (tester) async {
     final api = FakeApi();
     var signedIn = false;
-    await tester.pumpWidget(MaterialApp(
-      home: LoginPage(api: api, onSignedIn: () => signedIn = true),
-    ));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LoginPage(api: api, onSignedIn: () => signedIn = true),
+      ),
+    );
 
-    await tester.enterText(find.widgetWithText(TextFormField, 'Username'), 'operator');
-    await tester.enterText(find.widgetWithText(TextFormField, 'Password'), 'correct-password');
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Username'),
+      'operator',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Password'),
+      'correct-password',
+    );
     await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
     await tester.pumpAndSettle();
 
@@ -55,13 +68,22 @@ void main() {
 
   testWidgets('router onboarding sends the shared API contract', (tester) async {
     final api = FakeApi();
-    await tester.pumpWidget(MaterialApp(home: RouterOnboardingPage(api: api)));
+    await tester.pumpWidget(
+      MaterialApp(home: RouterOnboardingPage(api: api)),
+    );
 
-    await tester.enterText(find.widgetWithText(TextFormField, 'Router name'), 'Westlands Branch');
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Router name'),
+      'Westlands Branch',
+    );
     await tester.pump();
-    expect(find.text('westlands-branch'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Generate setup command'));
+    final slugField = tester.widget<TextFormField>(find.byType(TextFormField).at(1));
+    expect(slugField.controller?.text, 'westlands-branch');
+
+    await tester.tap(
+      find.widgetWithText(FilledButton, 'Generate setup command'),
+    );
     await tester.pumpAndSettle();
 
     expect(api.onboardingRequest?['name'], 'Westlands Branch');
