@@ -18,6 +18,7 @@ class _RouterOnboardingPageState extends State<RouterOnboardingPage> {
   final _slug = TextEditingController();
   bool _busy = false;
   bool _replaceManagedTunnel = false;
+  bool _slugEdited = false;
   String _provider = 'mpesa';
   String? _error;
   Map<String, dynamic>? _bundle;
@@ -53,7 +54,9 @@ class _RouterOnboardingPageState extends State<RouterOnboardingPage> {
     } on UzanetApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Unable to create the onboarding bundle. Check your connection and try again.');
+      if (mounted) {
+        setState(() => _error = 'Unable to create the onboarding bundle. Check your connection and try again.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -70,7 +73,9 @@ class _RouterOnboardingPageState extends State<RouterOnboardingPage> {
     final bundle = _bundle;
     final command = bundle?['install_command']?.toString() ?? '';
     final expiresAt = bundle?['expires_at']?.toString() ?? '';
-    final router = bundle?['router'] is Map ? Map<String, dynamic>.from(bundle!['router'] as Map) : null;
+    final router = bundle?['router'] is Map
+        ? Map<String, dynamic>.from(bundle!['router'] as Map)
+        : null;
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -78,10 +83,13 @@ class _RouterOnboardingPageState extends State<RouterOnboardingPage> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Text('Connect a router', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+          Text(
+            'Connect a router',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+          ),
           const SizedBox(height: 8),
           Text(
-            'Uzanet will generate the same one-line RouterOS setup command used by the web portal. Paste it into the MikroTik terminal; the router then claims itself over the control tunnel.',
+            'Uzanet generates the same one-line RouterOS setup command used by the web portal. Paste it into the MikroTik terminal; the router then claims itself over the control tunnel.',
             style: TextStyle(color: colors.onSurfaceVariant),
           ),
           const SizedBox(height: 22),
@@ -93,19 +101,26 @@ class _RouterOnboardingPageState extends State<RouterOnboardingPage> {
                   TextFormField(
                     controller: _name,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(labelText: 'Router name', hintText: 'Westlands branch'),
+                    decoration: const InputDecoration(
+                      labelText: 'Router name',
+                      hintText: 'Westlands branch',
+                    ),
                     onChanged: (value) {
-                      if (_slug.text.isEmpty || _slug.text == _slugify(_name.text.substring(0, _name.text.length - (value.isNotEmpty ? 1 : 0)))) {
-                        _slug.text = _slugify(value);
-                      }
+                      if (!_slugEdited) _slug.text = _slugify(value);
                     },
-                    validator: (value) => value == null || value.trim().length < 2 ? 'Enter a router name.' : null,
+                    validator: (value) => value == null || value.trim().length < 2
+                        ? 'Enter a router name.'
+                        : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _slug,
                     autocorrect: false,
-                    decoration: const InputDecoration(labelText: 'Portal slug', hintText: 'westlands-branch'),
+                    decoration: const InputDecoration(
+                      labelText: 'Portal slug',
+                      hintText: 'westlands-branch',
+                    ),
+                    onChanged: (_) => _slugEdited = true,
                     validator: (value) {
                       final slug = value?.trim() ?? '';
                       if (!RegExp(r'^[a-z0-9](?:[a-z0-9-]{1,58}[a-z0-9])$').hasMatch(slug)) {
@@ -128,7 +143,9 @@ class _RouterOnboardingPageState extends State<RouterOnboardingPage> {
                   SwitchListTile.adaptive(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Replace existing Uzanet-managed tunnel'),
-                    subtitle: const Text('Only enable this when this physical router was previously paired to another Uzanet router record.'),
+                    subtitle: const Text(
+                      'Only enable this when this physical router was previously paired to another Uzanet router record.',
+                    ),
                     value: _replaceManagedTunnel,
                     onChanged: (value) => setState(() => _replaceManagedTunnel = value),
                   ),
@@ -137,7 +154,10 @@ class _RouterOnboardingPageState extends State<RouterOnboardingPage> {
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: colors.errorContainer, borderRadius: BorderRadius.circular(12)),
+                      decoration: BoxDecoration(
+                        color: colors.errorContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: Text(_error!, style: TextStyle(color: colors.onErrorContainer)),
                     ),
                   ],
@@ -147,7 +167,11 @@ class _RouterOnboardingPageState extends State<RouterOnboardingPage> {
                     child: FilledButton.icon(
                       onPressed: _busy ? null : _generate,
                       icon: _busy
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : const Icon(Icons.router_rounded),
                       label: Text(_busy ? 'Generating…' : 'Generate setup command'),
                     ),
@@ -158,7 +182,10 @@ class _RouterOnboardingPageState extends State<RouterOnboardingPage> {
           else ...[
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: colors.primaryContainer, borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(
+                color: colors.primaryContainer,
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -168,10 +195,23 @@ class _RouterOnboardingPageState extends State<RouterOnboardingPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Setup bundle ready', style: TextStyle(fontWeight: FontWeight.w800, color: colors.onPrimaryContainer)),
+                        Text(
+                          'Setup bundle ready',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: colors.onPrimaryContainer,
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        Text(router?['name']?.toString() ?? _name.text, style: TextStyle(color: colors.onPrimaryContainer)),
-                        if (expiresAt.isNotEmpty) Text('Run before $expiresAt', style: TextStyle(color: colors.onPrimaryContainer)),
+                        Text(
+                          router?['name']?.toString() ?? _name.text,
+                          style: TextStyle(color: colors.onPrimaryContainer),
+                        ),
+                        if (expiresAt.isNotEmpty)
+                          Text(
+                            'Run before $expiresAt',
+                            style: TextStyle(color: colors.onPrimaryContainer),
+                          ),
                       ],
                     ),
                   ),
@@ -188,10 +228,15 @@ class _RouterOnboardingPageState extends State<RouterOnboardingPage> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark ? Colors.black26 : const Color(0xFFF4F6F8),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.black26
+                    : const Color(0xFFF4F6F8),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: SelectableText(command, style: const TextStyle(fontFamily: 'monospace', fontSize: 12.5, height: 1.45)),
+              child: SelectableText(
+                command,
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 12.5, height: 1.45),
+              ),
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
@@ -204,6 +249,9 @@ class _RouterOnboardingPageState extends State<RouterOnboardingPage> {
               onPressed: () => setState(() {
                 _bundle = null;
                 _error = null;
+                _name.clear();
+                _slug.clear();
+                _slugEdited = false;
               }),
               child: const Text('Onboard another router'),
             ),
